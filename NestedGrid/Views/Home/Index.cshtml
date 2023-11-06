@@ -1,0 +1,276 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<link href="~/Content/DataTables/css/jquery.dataTables.css" rel="stylesheet" />
+<link href="~/Content/DataTables/css/dataTables.bootstrap.css" rel="stylesheet" />
+<link href="~/Content/DataTables/css/select.dataTables.css" rel="stylesheet" />
+<style>
+    #detailsTable thead {
+        background-color: cornflowerblue !important 
+    }
+</style>
+@*<div class="jumbotron">*@
+@*<table id="NestedGrid" class="table-responsive" style="width:100%;font-size:13px">
+            <thead style="  background: linear-gradient(to right, #004e92, #0a2283); color: white;width:100%;height:20px">
+                <tr>
+                    <th>SNo</th>
+                    <th style="width:100%"> UserId <span>*</span></th>
+                    <th>UserName</th>
+                    <th><input name="select_all" value="1" id="ChkAllUsers" type="checkbox" /></th>
+                </tr>
+            </thead>
+        </table>
+    </div>*@
+<div class="container" style="padding:10px;border: 1px solid black;margin-top:10px;">
+    <table id="exampleTable" class="table table-striped" >
+        <thead style="background-color:cadetblue">
+            <tr>
+                <th>CustomerName</th>
+                <th>City</th>
+                <th>TotalOrders</th>
+                <th><input name="select_all" value="1" id="ChkAllUsers" type="checkbox" /></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<div style="display:none">
+    <table id="detailsTable" class="table table-striped">
+        <thead >
+            <tr style="background-color:cornflowerblue;color:white">
+                <th>ItemPhoto</th>
+                <th>ItemName</th>
+                <th>OrderId</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/jquery-3.3.1.js"></script>
+    <script src="~/Scripts/DataTables/jquery.dataTables.js"></script>
+    <script src="~/Scripts/DataTables/dataTables.bootstrap.js"></script>
+    <script src="~/Scripts/DataTables/dataTables.buttons.js"></script>
+    <script src="~/Scripts/DataTables/buttons.html5.js"></script>
+    <script src="~/Scripts/DataTables/pdf.js"></script>
+    <script src="~/Scripts/DataTables/jszip.js"></script>
+    <script src="~/Scripts/DataTables/pdfFont.js"></script>
+    <script src="~/Scripts/DataTables/select.js"></script>
+    <link href="~/Content/DataTables/css/buttons.dataTables.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+    <script type="text/javascript">
+        function fnFormatDetails(table_id, html) {
+            var sOut = "<table id=\"exampleTable_" + table_id + "\">";
+            sOut += html;
+            sOut += "</table>";
+            return sOut;
+
+        }
+
+        //////////////////////////////////////////////////////////// EXTERNAL DATA - Array of Objects
+      //  <img src="~/Content/Images/watch.jpg" />
+        var terranImage = "../Content/Images/watch.jpg";
+        var jaedongImage = "https://marami.biz/images/clients/all-clients/95.jpeg";
+        var grubbyImage = " https://media.istockphoto.com/id/92467657/photo/chronograph-watch.jpg?s=2048x2048&w=is&k=20&c=QvjujRRXGsQoBpR3rPPNOhQG-igSpWhNrNscQInysrE=";
+       // var jaedongImage = "https://i.imgur.com/s3OMQ09.png";
+       // var grubbyImage = "https://i.imgur.com/wnEiUxt.png";
+       // var stephanoImage = "https://i.imgur.com/vYJHVSQ.jpg";
+
+        var stephanoImage = "../Content/Images/Laptop.jfif";
+    //    var scarlettImage = "https://i.imgur.com/zKamh3P.jpg";
+        var scarlettImage = "../Content/Images/mobile.jfif";
+        // DETAILS ROW A
+        var detailsRowAPlayer1 = { pic: jaedongImage, name: "Decoreitem", OrderId: "11089", Date: "23/10/2023" };
+        var detailsRowAPlayer2 = { pic: scarlettImage, name: "Mobile", OrderId: "11086", Date: "22/10/2023" };
+        var detailsRowAPlayer3 = { pic: stephanoImage, name: "Laptop", OrderId: "11087", Date: "25/10/2023" };
+
+        var detailsRowA = [detailsRowAPlayer1, detailsRowAPlayer2, detailsRowAPlayer3];
+
+        // DETAILS ROW B
+        var detailsRowBPlayer1 = { pic: grubbyImage, name: "Watch", OrderId: "11056", Date: "25/10/2023" };
+
+        var detailsRowB = [detailsRowBPlayer1];
+
+        // DETAILS ROW C
+        var detailsRowCPlayer1 = { pic: terranImage, name: "Watch", OrderId: "11023", Date: "24/10/2023" };
+
+        var detailsRowC = [detailsRowCPlayer1];
+
+        var rowA = { Cname: "Jaya", city: "HYD", totalorders: "3", details: detailsRowA };
+        var rowB = { Cname: "Ramya", city: "GUNTUR", totalorders: "1", details: detailsRowB };
+        var rowC = { Cname: "Revanth", city: "DARSI", totalorders: "1", details: detailsRowC };
+
+        var newRowData = [rowA, rowB, rowC];
+
+        ////////////////////////////////////////////////////////////
+
+        var iTableCounter = 1;
+        var oTable;
+        var oInnerTable;
+        var detailsTableHtml;
+
+        //Run On HTML Build
+        $(document).ready(function () {
+
+            // you would probably be using templates here
+            detailsTableHtml = $("#detailsTable").html();
+
+            //Insert a 'details' column to the table
+            var nCloneTh = document.createElement('th');
+            var nCloneTd = document.createElement('td');
+            nCloneTd.innerHTML = '<img src="http://i.imgur.com/SD7Dz.png">';
+            nCloneTd.className = "center";
+
+            $('#exampleTable thead tr').each(function () {
+                this.insertBefore(nCloneTh, this.childNodes[0]);
+            });
+
+            $('#exampleTable tbody tr').each(function () {
+                this.insertBefore(nCloneTd.cloneNode(true), this.childNodes[0]);
+            });
+
+
+            //Initialse DataTables, with no sorting on the 'details' column
+            var oTable = $('#exampleTable').dataTable({
+                "select":true,
+                "bJQueryUI": true,
+                "aaData": newRowData,
+                "bPaginate": false,
+                "aoColumns": [
+                    {
+                        "mDataProp": null,
+                        "sClass": "control center",
+                        "sDefaultContent": '<img src="http://i.imgur.com/SD7Dz.png">'
+                    },
+                    { "data": "Cname" },
+                    { "data": "city" },
+                    { "data": "totalorders" }
+                ],
+                "dom": "Bfrtip",
+                //"buttons": ['excel', 'pdf', 'copy'],
+                "buttons": [
+                    { extend: 'copy', text: 'copy', exportOptions: { modifier: { selected: true } } },
+                    { extend: 'csv', text: 'Export To CSV', exportOptions: { modifier: { selected: true } }},
+                    {
+                        extend: 'excel', text: 'Export To Excel', exportOptions: { modifier: { selected: true } }, excelStyles: {
+                            "template": "blue_medium"
+                        },title: 'Customer Details',
+                        customize: function (xlsx) {
+                            debugger;
+                            // Customize the Excel file, including nested grid data
+                            var sheet = xlsx.xl.worksheets['sheet1.xml'];
+
+                            // Iterate through the rows in the sheet to add nested grid data
+                            $('row', sheet).each(function () {
+                                var row = this;
+                                var cell = $(row).find('c:last');
+                                var colIndex = cell.attr('r');
+
+                                if (colIndex && colIndex.match(/\d+/) > 4) {
+                                    // Check if the row corresponds to the nested grid data
+                                    var rowIndex = parseInt(colIndex.match(/\d+/)[0]);
+
+                                    // Get the nested grid data for this row
+                                    var nestedData = newRowData[rowIndex - 1].details;
+
+                                    // Add the nested data as a new row in the Excel sheet
+                                    $.each(nestedData, function (index, data) {
+                                        var newRow = '<row r="' + (rowIndex + index + 1) + '">';
+                                        $.each(data, function (key, value) {
+                                            newRow += '<c t="inlineStr" r="' + String.fromCharCode(65 + key) + (rowIndex + index + 1) + '">';
+                                            newRow += '<is>';
+                                            newRow += '<t>' + value + '</t>';
+                                            newRow += '</is>';
+                                            newRow += '</c>';
+                                        });
+                                        newRow += '</row>';
+                                        $(row).after(newRow);
+                                    });
+                                }
+                            });
+                        }
+                    },
+                    {
+                        extend: 'pdf', text: 'Export To pdf', exportOptions: { modifier: { selected: true } }
+                    }
+                ],
+                
+                "columnDefs": [
+                    //{
+                    //    "targets": 0, "render": function (data, type, full, meta) {
+                    //        return meta.row + 1;
+                    //    }
+                    //},
+                    {
+                        "targets": 4,
+                        'searchable': false,
+                        'orderable': false,
+                        //'className': 'dt-center',
+                        "render": function (data, type, full, meta) {
+                            return '<input type="checkbox" name="selectall" class="checkboxes" value="'
+                                + $('<div/>').text(data).html() + '">';
+                        }
+                    },
+                ],
+              
+            });
+          
+           
+
+            $('#exampleTable tbody td img').on('click', function () {
+                debugger;
+                var nTr = $(this).parents('tr')[0];
+                var nTds = this;
+
+                if (oTable.fnIsOpen(nTr)) {
+                    /* This row is already open - close it */
+                    this.src = "http://i.imgur.com/SD7Dz.png";
+                    oTable.fnClose(nTr);
+                }
+                else {
+                    debugger;
+                    var rowIndex = oTable.fnGetPosition($(this).closest('tr')[0]);
+                    var detailsRowData = newRowData[rowIndex].details;
+
+                    this.src = "http://i.imgur.com/d4ICC.png";
+                    oTable.fnOpen(nTr, fnFormatDetails(iTableCounter, detailsTableHtml), 'details');
+                    oInnerTable = $("#exampleTable_" + iTableCounter).dataTable({
+                        "bJQueryUI": true,
+                        "bFilter": false,
+                        "aaData": detailsRowData,
+                        "bSort": true, // disables sorting
+                        "aoColumns": [
+                            { "data": "pic" },
+                            { "data": "name" },
+                            { "data": "OrderId" },
+                            { "data": "server" }
+                        ],
+                        "bPaginate": false,
+                        "oLanguage": {
+                            "sInfo": "_TOTAL_ entries"
+                        },
+                        "fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                            var imgLink = aData['pic'];
+                            var imgTag = '<img width="100px" src="' + imgLink + '" />';
+                            $('td:eq(0)', nRow).html(imgTag);
+                            return nRow;
+                        }
+                    });
+                    iTableCounter = iTableCounter + 1;
+                }
+            });
+
+            $('#ChkAllUsers').click(function () {
+                debugger;
+                if (this.checked) {
+                    $(".checkboxes").prop("checked", true);
+                } else {
+                    $(".checkboxes").prop("checked", false);
+                }
+            });
+
+        });
+    </script>
+}

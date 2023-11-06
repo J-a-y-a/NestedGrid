@@ -1,0 +1,222 @@
+﻿
+@{
+    ViewBag.Title = "InlineEdit";
+}
+
+<h2>InlineEdit</h2>
+<link href="~/Content/DataTables/css/jquery.dataTables.css" rel="stylesheet" />
+<link href="~/Content/DataTables/css/dataTables.bootstrap.css" rel="stylesheet" />
+<link href="~/Content/DataTables/css/select.dataTables.css" rel="stylesheet" />
+<div class="container" style="padding:10px;border: 1px solid black;margin-top:10px;">
+    <table id="Persontable" class="table table-striped">
+        <thead style="background-color:cadetblue">
+            <tr>
+                <th style="display:none">Id </th>
+                <th>PersonName</th>
+                <th>Gender</th>
+                <th>DOB</th>
+                <th>State</th>
+                <th>EDIT</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+@section scripts{
+    <script src="~/Scripts/jquery-3.3.1.js"></script>
+    <script src="~/Scripts/DataTables/jquery.dataTables.js"></script>
+    <script src="~/Scripts/DataTables/dataTables.bootstrap.js"></script>
+    <script src="~/Scripts/DataTables/dataTables.buttons.js"></script>
+    <script src="~/Scripts/DataTables/buttons.html5.js"></script>
+    <script src="~/Scripts/DataTables/pdf.js"></script>
+    <script src="~/Scripts/DataTables/jszip.js"></script>
+    <script src="~/Scripts/DataTables/pdfFont.js"></script>
+    <script src="~/Scripts/DataTables/select.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <link href="~/Content/DataTables/css/buttons.dataTables.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
+    <script type="text/javascript">
+        var oTable;
+        $(document).ready(function () {
+            oTable = $('#Persontable').DataTable({
+                ajax: {
+                    type: 'GET',
+                    url: '/Person/GetData',
+                    dataSrc: ''
+                },
+                columns: [
+                    {
+                        "data": "Name"
+
+                    },
+                    {
+                        "data": "Gender"
+                    },
+                    {
+                        "data": "DOB", "render": function (data) {
+                        
+                            if (data != null) {
+                                var ddd = parseInt(data.substr(6, data.length - 7));
+                                var date = new Date(ddd);
+                                var month = date.getMonth() + 1;
+                                if (date.getDate().toString().length > 1) {
+                                    return date.getDate() + "/" + (month.toString().length > 1 ? month : "0" + month) + "/" + date.getFullYear();
+                                }
+                                else {
+                                    return "0" + date.getDate() + "/" + (month.toString().length > 1 ? month : "0" + month) + "/" + date.getFullYear();
+                                }
+                            }
+                        },
+                    },
+                    {
+                        "data": "Country"
+                    },
+                    {
+                     
+                        render: function (data, type, row) {
+                            return createButton('edit', row.id);
+                        }
+                    },
+                    {
+                      render: function (data, type, row) {
+                            return createButton('delete', row.id);
+                        }
+                    }
+                ],
+
+            });
+            $('#Persontable').on('click', 'td .edit', function () {
+                var row = $(this).closest('tr');
+                var columns = row.find('td');
+                var clickedRow = $($(this).closest('td')).closest('tr');
+                columns.each(function (columnIndex) {
+                    var cell = $(this);
+                    var rowData = $('#Persontable').DataTable().row(row).data();
+                    if (columnIndex === 0) { // Assuming you want to edit the first column (Name)
+                        cell.html('<input type="text" value="' + rowData.Name + '" />');
+                    } else if (columnIndex === 1) { // Edit Gender
+                        cell.html('<input type="radio" name="Gender" value="Male" ' + (rowData.Gender == 'Male' ? 'checked' : '') + '> Male' +
+                            '<input type="radio" name="Gender" value="Female" ' + (rowData.Gender =='Female' ? 'checked' : '') + '> Female');
+                    } else if (columnIndex === 2) {
+                        debugger;
+                        var ddd = parseInt(rowData.DOB.substr(6, rowData.DOB.length - 7));
+                        var date = new Date(ddd);
+                        var year = date.getFullYear();
+                        var month = (date.getMonth() + 1).toString().padStart(2, '0'); // Ensure two-digit month
+                        var day = date.getDate().toString().padStart(2, '0'); // Ensure two-digit day
+
+                        var formattedDate = year + '-' + month + '-' + day;
+                        cell.html('<input type="date"  value="' + formattedDate + '" />');
+                    } else if (columnIndex === 3) { // Edit Country
+                        var countries = ['INDIA', 'USA', 'Canada', 'UK'];
+                        var dropdown = '<select>';
+                        for (var i = 0; i < countries.length; i++) {
+                            dropdown += '<option value="' + countries[i] + '" ' + (rowData.Country === countries[i] ? 'selected' : '') + '>' + countries[i] + '</option>';
+                        }
+                        dropdown += '</select>';
+                        cell.html(dropdown);
+                    }
+                    $(clickedRow).find('td .edit').removeClass('edit').addClass('update').html('Update');
+                    $(clickedRow).find('td .delete').removeClass('delete').addClass('cancel').html('Cancel');
+                });
+            });
+            $('#Persontable').on('click', 'tbody td .update', function (e) {
+                debugger;
+                var openedTextBox = $('#Persontable').find('input,select');
+          
+                $.each(openedTextBox, function (k, $cell) {
+                    debugger
+                    if ($($cell).is('input[type="radio"]')) {
+                        if ($cell.checked == true) {
+                            var rowIndex = oTable.row($($cell).closest('tr')).index();
+                            var cell = $(this).closest('td').index;
+                            oTable.cell(rowIndex, cell).data($cell.value);
+                            $(openedTextBox[k]).closest('td').html($cell.value);
+                        }
+                    } else {
+                        debugger;
+                       var rowIndex = oTable.row($($cell).closest('tr')).index();
+                        var cell = $(this).closest('td').index;
+                         oTable.cell(rowIndex, cell).data($cell.value);
+                        $(openedTextBox[k]).closest('td').html($cell.value.split("-").reverse().join("/"));
+                    }
+                    });
+                $('#Persontable tbody tr td .update').removeClass('update').addClass('edit').html('Edit');
+                $('#Persontable tbody tr td .cancel').removeClass('cancel').addClass('delete').html('Delete');
+                var rowData = oTable.row($(this).closest('tr')).data();
+                $.ajax({
+                    url: '/Person/UpdateData',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ rowData: rowData }),
+                    success: function () {
+                        alert("Data Updated Successfully");
+                        oTable.ajax.reload();
+                    },
+                    error: function () {
+
+                    }
+                });
+            });
+
+           
+
+
+
+            // Handle changes and save data
+        //     $('#Persontable').on('change', 'input, select', function () {
+        //        debugger;
+        //        var cell = $(this).closest('td');
+        //        var columnIndex = cell.index();
+        //        var newValue = $(this).val();
+        //        var rowData = $('#Persontable').DataTable().row(cell.closest('tr')).data();
+        //        if (columnIndex == 2) {
+        //            rowData.DOB = newValue;
+        //        } else {
+        //            var ddd = parseInt(rowData.DOB.substr(6, rowData.DOB.length - 7));
+        //            var date = new Date(ddd);
+        //            var year = date.getFullYear();
+        //            var month = (date.getMonth() + 1).toString().padStart(2, '0'); // Ensure two-digit month
+        //            var day = date.getDate().toString().padStart(2, '0'); // Ensure two-digit day
+
+        //            var formattedDate = year + '-' + month + '-' + day;
+        //            rowData.DOB = formattedDate;
+        //            if (columnIndex === 0) {
+        //                rowData.Name = newValue;
+        //            } else if (columnIndex === 1) {
+        //                rowData.Gender = newValue;
+        //            }
+        //            else if (columnIndex === 3) {
+        //                rowData.Country = newValue;
+        //            }
+        //        }
+
+
+        //        $.ajax({
+        //            url: '/Person/UpdateData',
+        //            type: 'POST',
+        //            contentType: 'application/json', // Set the content type to JSON
+        //            data: JSON.stringify({ rowData: rowData }),
+        //            //data: { rowData: rowData },
+        //            success: function () {
+        //                alert("Data Is Updated Successfully");
+        //                oTable.ajax.reload();
+        //            },
+        //            error: function () {
+        //                // Handle error (e.g., display an error message)
+        //            }
+        //        });
+        //        // Update the data in your DataTable
+        //        // $('#Persontable').DataTable().row(cell.closest('tr')).data(rowData).draw();
+        //    });
+            });
+        function createButton(buttonType, rowID) {
+            var buttonText = buttonType == "edit" ? "Edit" : "Delete";
+            return '<button class="' + buttonType + '" type="button">' + buttonText + '</button>';
+        }
+    </script>
+
+}
